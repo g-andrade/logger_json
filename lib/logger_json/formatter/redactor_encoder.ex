@@ -27,7 +27,7 @@ defmodule LoggerJSON.Formatter.RedactorEncoder do
   def encode(true, _redactors), do: true
   def encode(false, _redactors), do: false
   def encode(atom, _redactors) when is_atom(atom), do: atom
-  def encode(tuple, redactors) when is_tuple(tuple), do: tuple |> Tuple.to_list() |> encode(redactors)
+  def encode(tuple, redactors) when is_tuple(tuple), do: tuple |> Tuple.to_list() |> encode_proper_list(redactors)
   def encode(number, _redactors) when is_number(number), do: number
   def encode("[REDACTED]", _redactors), do: "[REDACTED]"
   def encode(binary, _redactors) when is_binary(binary), do: encode_binary(binary)
@@ -58,8 +58,26 @@ defmodule LoggerJSON.Formatter.RedactorEncoder do
     _ -> for(el <- keyword, do: encode(el, redactors))
   end
 
-  def encode(list, redactors) when is_list(list), do: for(el <- list, do: encode(el, redactors))
+  def encode(list, redactors) when is_list(list), do: encode_maybe_improper_list(list, redactors)
   def encode(data, _redactors), do: inspect(data, pretty: true, width: 80)
+
+  defp encode_proper_list(list, redactors) do
+    for(el <- list, do: encode(el, redactors))
+  end
+
+  defp encode_maybe_improper_list([el | next], redactors) do
+    [encode(el, redactors) | encode_maybe_improper_list(next, redactors)]
+  end
+
+  defp encode_maybe_improper_list(last, redactors) do
+    if last == [] do
+      # proper list
+      []
+    else
+      # improper list
+      encode(last, redactors)
+    end
+  end
 
   defp encode_key_value({key, value}, redactors) do
     key = encode_key(key)
