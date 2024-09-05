@@ -75,7 +75,7 @@ defmodule LoggerJSON.Formatter.RedactorEncoder do
       []
     else
       # improper list
-      encode(last, redactors)
+      ["IMPROPER_MARKER", encode(last, redactors)]
     end
   end
 

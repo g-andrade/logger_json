@@ -101,8 +101,8 @@ defmodule LoggerJSON.Formatter.RedactorEncoderTest do
       assert encode([{:a, 1}, {:b, 2, :c}], []) == [[:a, 1], [:b, 2, :c]]
     end
 
-    test "inspects improper lists" do
-      assert encode([1, ["2" | 3.0]], []) == [1, ["2" | 3.0]]
+    test "handles improper lists but marks them in Jason-compatible way" do
+      assert encode([1, "2" | 3.0], []) == [1, "2", "IMPROPER_MARKER", 3.0]
     end
 
     test "formats nested structures" do
